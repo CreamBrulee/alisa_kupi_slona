@@ -96,6 +96,8 @@ def handle_dialog(req, res):
         if animal == 'кролик':
             res['response']['text'] = f'{animal.title()}а можно найти на Яндекс.Маркете!'
             res['response']['end_session'] = True
+            animal = 'слон'
+            return
         animal = 'кролик'
         sessionStorage[user_id] = {
             'suggests': [
