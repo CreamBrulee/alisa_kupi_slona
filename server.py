@@ -2,10 +2,10 @@
 from flask import Flask, request
 import logging
 
-# библиотека, которая нам понадобится для работы с JSON 
+# библиотека, которая нам понадобится для работы с JSON
 import json
 
-# создаем приложение 
+# создаем приложение
 # мы передаем __name__, в нем содержится информация, в каком модуле мы находимся.
 # В данном случае там содержится '__main__', так как мы обращаемся к переменной из запущенного модуля.
 # если бы такое обращение, например, произошло внутри модуля logging, то мы бы получили 'logging'
@@ -21,6 +21,13 @@ logging.basicConfig(level=logging.INFO)
 # Такая запись говорит, что мы показали пользователю эти три подсказки. Когда он откажется купить слона,
 # то мы уберем одну подсказку. Как будто что-то меняется :)
 sessionStorage = {}
+
+animal = 'слон'
+
+
+@app.route('/test', methods=['GET'])
+def test():
+    return "OK"
 
 
 @app.route('/post', methods=['POST'])
@@ -50,6 +57,7 @@ def main():
 
 
 def handle_dialog(req, res):
+    global animal
     user_id = req['session']['user_id']
 
     if req['session']['new']:
@@ -65,7 +73,7 @@ def handle_dialog(req, res):
             ]
         }
         # Заполняем текст ответа
-        res['response']['text'] = 'Привет! Купи слона!'
+        res['response']['text'] = f'Привет! Купи слона!'
         # Получим подсказки
         res['response']['buttons'] = get_suggests(user_id)
         return
@@ -79,15 +87,28 @@ def handle_dialog(req, res):
         'ладно',
         'куплю',
         'покупаю',
-        'хорошо'
+        'хорошо',
+        'я покупаю',
+        'я куплю'
     ]:
         # Пользователь согласился, прощаемся.
-        res['response']['text'] = 'Слона можно найти на Яндекс.Маркете!'
-        res['response']['end_session'] = True
+        res['response']['text'] = f'{animal.title()}а можно найти на Яндекс.Маркете! А теперь купи кролика!'
+        if animal == 'кролик':
+            res['response']['text'] = f'{animal.title()}а можно найти на Яндекс.Маркете!'
+            res['response']['end_session'] = True
+        animal = 'кролик'
+        sessionStorage[user_id] = {
+            'suggests': [
+                "Не хочу.",
+                "Не буду.",
+                "Отстань!",
+            ]
+        }
+        res['response']['buttons'] = get_suggests(user_id)
         return
 
     # Если нет, то убеждаем его купить слона!
-    res['response']['text'] = 'Все говорят "%s", а ты купи слона!' % (
+    res['response']['text'] = f'Все говорят "%s", а ты купи {animal}а!' % (
         req['request']['original_utterance']
     )
     res['response']['buttons'] = get_suggests(user_id)
@@ -112,7 +133,7 @@ def get_suggests(user_id):
     if len(suggests) < 2:
         suggests.append({
             "title": "Ладно",
-            "url": "https://market.yandex.ru/search?text=слон",
+            "url": "https://market.yandex.ru/search?text=" + str(animal),
             "hide": True
         })
 
